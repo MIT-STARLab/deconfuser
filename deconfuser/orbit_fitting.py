@@ -17,19 +17,19 @@ class OrbitGridSearch:
 
     Usage example:
         #grid search for 3 equally spaced observations 4 months apart
+        mu = 4*np.pi**2 #in AU^3/year^2
         ts = np.arange(0,1,1.0/3) #in years
         of = orbit_fitting.OrbitGridSearch(mu, ts, max_e=0.3, min_a=0.8, max_a=1.2, tol=0.1)
 
         #planet with a = 1, e = 0.3 and random orientation
         a,e = 1,0.3
         i,o,O,M0 = 2*np.pi*np.random.random(4)
-        mu = 4*np.pi**2 #in AU^3/year^2
         xs,ys = sample_planets.get_observations(a, e, i, o, O, M0, ts, mu)
         xys = np.concatenate([xs,ys]).T
 
         #fit orbital elements and print RMS errors
         err, (a, e, i, o, O, M0) = of.fit(xys)
-        xs_fit,ys_fit = deconfuser.sample_planets.get_observations(a, e, i, o, O, M0, ts, mu)
+        xs_fit,ys_fit = sample_planets.get_observations(a, e, i, o, O, M0, ts, mu)
         print(err, np.sqrt(np.mean((xs-xs_fit)**2 + (ys-ys_fit)**2)))
     """
     def __init__(self, mu, ts, max_e, min_a, max_a, tol, kepler_iter=32):     
