@@ -1,6 +1,6 @@
 import numpy as np
-import sample_planets
-import orbit_fitting
+import deconfuser.sample_planets as sample_planets
+import deconfuser.orbit_fitting as orbit_fitting
 
 #testing parameters
 min_a = 0.25
@@ -8,8 +8,10 @@ max_a = 4
 max_e = 0.7
 tol = 0.1
 mu = 4*np.pi**2
+N_systems = 1000
+N_planets = 10
 
-for i in range(1000):
+for j in range(N_systems):
     #choose semi-majot axis first
     a = np.random.random()*(max_a - min_a) + min_a
 
@@ -30,11 +32,12 @@ for i in range(1000):
     gs = orbit_fitting.OrbitGridSearch(mu, ts, max_e, a_regions[a_i-1], a_regions[a_i], tol)
 
     #sample several planets with given semi-major axis and random orientation
-    _,e,i,o,O,M0 = sample_planets.random_planet_elements(64, a, a+0.5*tol, max_e, 0, 0, 2*np.pi, 2*np.pi)
+    _,e,i,o,O,M0 = sample_planets.random_planet_elements(N_planets, a, a+0.5*tol, max_e, 0, 0, 2*np.pi, 2*np.pi)
     xs,ys = sample_planets.get_observations(a, e, i, o, O, M0, ts, mu)
 
     #fit each planet with and orbit and make sure the error is below tolerance (true error of best fit is zero)
-    for j in range(xs.shape[1]):
+    for k in range(N_planets):
+        print("Testing system (%d/%d), planet (%d/%d)"%(j, N_systems, k, N_planets), end="\r")
         xys = np.stack([xs[j], ys[j]], axis=1)
         fit_err = gs.fit(xys, only_error=True)
 
@@ -44,4 +47,3 @@ for i in range(1000):
             print("ts = ", list(ts))
             print("min_a, max_a, max_e = ", (a_regions[a_i-1], a_regions[a_i], max_e))
             print("planet = ", list(planets[0]))
-
