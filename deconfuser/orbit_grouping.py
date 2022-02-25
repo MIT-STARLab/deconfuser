@@ -1,6 +1,7 @@
 import numpy as np
-import orbit_fitting
 import itertools
+
+import deconfuser.orbit_fitting as orbit_fitting
 
 class OrbitGrouper:
     """
