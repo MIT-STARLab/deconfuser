@@ -4,10 +4,10 @@ import itertools
 import argparse
 import os
 
-import sample_planets
-import orbit_fitting
-import orbit_grouping
-import partition_ranking
+import deconfuser.sample_planets as sample_planets
+import deconfuser.orbit_fitting as orbit_fitting
+import deconfuser.orbit_grouping as orbit_grouping
+import deconfuser.partition_ranking as partition_ranking
 
 mu_sun = 4*np.pi**2 #Sun's gravitational parameter in AU^3/year^2
 
