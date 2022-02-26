@@ -14,6 +14,9 @@ python setup.py install
 
 ## Usage
 
+### Tutorial
+See tutorial.ipynb
+
 ### Distributed Monte-Carlo scheme for estimating confusion rates
 ```bash
 python test_deconfuser.py --help
