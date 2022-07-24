@@ -20,7 +20,8 @@ See tutorial.ipynb
 ### Distributed Monte-Carlo scheme for estimating confusion rates
 ```bash
 python test_deconfuser.py --help
-python test_deconfuser.py 0.2 0.1 0.05 --n_planets 3 --n_epochs 3 --cadence 0.5 --min_a 0.5 --max_a 1.5 --n_processes 4 --n_systems 100 > results.txt
+python test_deconfuser.py 0.2 0.1
+python multiprocess_test_deconfuser.py 0.2 0.1 0.05 --n_planets 3 --n_epochs 3 --cadence 0.5 --min_a 0.5 --max_a 1.5 --n_processes 4 --n_systems 100 > results.txt
 ```
 
 ### Orbit fitting only example
