@@ -113,13 +113,14 @@ def generate_and_test_systems():
                 #only keep groupings that cna be fitted with an orbit with the finer tolerance
                 groupings = [g for g in groupings if any(err < tolerances[j+1] for err in orbit_fitters[j].fit(observations[list(g)], only_error=True))]
 
-#run testing from multiple processes
-processes = []
-for i in range(args.n_processes):
-    p = multiprocessing.Process(target=generate_and_test_systems)
-    p.start()
-    processes.append(p)
+if __name__ == '__main__':
+    #run testing from multiple processes
+    processes = []
+    for i in range(args.n_processes):
+        p = multiprocessing.Process(target=generate_and_test_systems)
+        p.start()
+        processes.append(p)
 
-#wait for all processes to finish
-for p in processes:
-    p.join()
+    #wait for all processes to finish
+    for p in processes:
+        p.join()
