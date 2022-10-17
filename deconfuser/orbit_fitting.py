@@ -192,7 +192,11 @@ class OrbitGridSearch:
 
         o = np.arctan2(-U[1,0], U[0,0]) - theta0 #argument of periapsis
         O = np.arctan2(-V[1,0], V[0,0]) #ascending node
-        i = np.arccos(s[1]/a) #inclination
+
+        if best_err < best_err_rot_only:
+            i = np.arccos(s[1]/a) #inclination
+        else:
+            i = 0
 
         return best_err, (a, e, i, o, O, M0)
 
