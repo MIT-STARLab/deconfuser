@@ -416,10 +416,11 @@ def estimate_min_max_a(xys, ts, mu, max_e, tol):
 
     #compute distances and time differences between detections all
     DX2 = (xys[:,0].reshape((-1,1)) - xys[:,0].reshape((1,-1)))**2 + (xys[:,1].reshape((-1,1)) - xys[:,1].reshape((1,-1)))**2
+    DX2 = (DX2 - 2*tol)*(DX2 > 2*tol) + np.finfo(float).eps
     DT2 = (ts.reshape((-1,1)) - ts.reshape((1,-1)))**2
-    DT2[np.arange(len(xys)),np.arange(len(xys))] = np.inf
+    DT2[np.arange(len(xys)),np.arange(len(xys))] = np.finfo(float).max
 
     #maximum semi-major axis must be small enough so that the planets are quick enough to move between detections
-    max_a = (DT2/(DX2 + 4*tol**2)).min()*mu*(1 + 2*max_e) + tol
+    max_a = (DT2/DX2).min()*mu*(1 + 2*max_e) + tol
 
     return min_a, max_a
