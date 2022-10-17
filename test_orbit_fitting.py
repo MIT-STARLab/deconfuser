@@ -38,7 +38,7 @@ for j in range(N_systems):
     #fit each planet with and orbit and make sure the error is below tolerance (true error of best fit is zero)
     for k in range(N_planets):
         print("Testing system (%d/%d), planet (%d/%d)"%(j, N_systems, k, N_planets), end="\r")
-        xys = np.stack([xs[j], ys[j]], axis=1)
+        xys = np.stack([xs[k], ys[k]], axis=1)
         fit_err = gs.fit(xys, only_error=True)
 
         if fit_err > tol:
