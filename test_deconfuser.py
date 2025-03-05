@@ -37,7 +37,7 @@ correct_partition = [tuple(range(i*len(ts),(i+1)*len(ts))) for i in range(args.n
 #1. full orbit grouping will be performed with the coarsest tolerance (i.e., recursively consider all groupings of observation)
 #2. only "full" groups that fit observation within a coarser tolerance will be fitted with a finer tolerance
 #Note: "missed" detections are not simulataed here so confusion will only "arise" with full groups (n_epochs observations per planet)
-tolerances = sorted(args.toleranes, reverse=True)
+tolerances = sorted(args.tolerances, reverse=True)
 orbit_grouper = orbit_grouping.OrbitGrouper(args.mu, ts, args.min_a-tolerances[0], args.max_a+tolerances[0], args.max_e, tolerances[0], lazy_init=False)
 orbit_fitters = [orbit_fitting.OrbitFitter(args.mu, ts, args.min_a-tol, args.max_a+tol, args.max_e, tol) for tol in tolerances[1:]]
 
