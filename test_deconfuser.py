@@ -24,7 +24,7 @@ parser.add_argument("--max_e", type=float, default=0.3, help="maximum eccentrici
 parser.add_argument("--spread_i_O", type=float, default=0.0, help="spread of inclination and LAN in radians (default: 0.0 - coplanar)")
 parser.add_argument("--n_systems", type=int, default=10, help="number of systems (default: 10)")
 parser.add_argument("-v", "--verbose", action="store_true", help="print planet data")
-parser.add_argument("toleranes", type=float, nargs="+", help="orbit fit tollerances")
+parser.add_argument("tolerances", type=float, nargs="+", help="orbit fit tollerances")
 args = parser.parse_args()
 
 #observation epochs (years)
