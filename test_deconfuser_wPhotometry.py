@@ -17,7 +17,7 @@ import deconfuser.orbit_grouping as orbit_grouping
 import deconfuser.partition_ranking as partition_ranking
 
 import photometry.photometry as photometry 
-import photometry.likelihood as L
+import photometry.likelihood_ranking as L_ranking
 from datetime import datetime 
 
 start = datetime.now()
@@ -190,7 +190,7 @@ for _ in range(args.n_systems):
                         # Phase information section
                         # Phase info is buried in likelihood function -- add as a return parameter in likelihood.py if you want to back it out
                         # Calculate likelihood of orbit option
-                        L_orbit, L_detections = L.get_L_orbit(n_detections=args.n_epochs,
+                        L_orbit, L_detections = L_ranking.get_L_orbit(n_detections=args.n_epochs,
                                                             a=parameters[0], e=parameters[1],
                                                             i=parameters[2],
                                                             o=parameters[3],
