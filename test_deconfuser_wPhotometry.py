@@ -17,7 +17,6 @@ import deconfuser.orbit_grouping as orbit_grouping
 import deconfuser.partition_ranking as partition_ranking
 
 import photometry.photometry as photometry 
-# from photometry.detector import Detector
 import photometry.likelihood as L
 from datetime import datetime 
 
