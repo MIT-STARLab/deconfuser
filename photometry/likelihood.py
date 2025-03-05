@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-@author: sammyh
+@author: S. N. Hasler
 
 Likelihood function for use in photometry deconfusion
 
@@ -9,7 +9,6 @@ Likelihood function for use in photometry deconfusion
 import numpy as np
 import deconfuser.sample_planets as sample_planets
 import photometry
-
 
 def likelihood(parameter, observed_sample, Detector, nbins=20): 
     '''

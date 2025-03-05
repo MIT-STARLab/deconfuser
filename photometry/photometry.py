@@ -2,7 +2,6 @@
 @author: S. N. Hasler
 
 Photometry functions for use with deconfuser.
-
 '''
 import numpy as np
 import scipy.constants as constants
