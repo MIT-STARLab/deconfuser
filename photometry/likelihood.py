@@ -8,7 +8,7 @@ Likelihood function for use in photometry deconfusion
 """
 import numpy as np
 import deconfuser.sample_planets as sample_planets
-import photometry
+import photometry.photometry as phot
 
 def likelihood(parameter, observed_sample, Detector, nbins=20): 
     '''
@@ -93,7 +93,7 @@ def get_L_orbit(n_detections, a, e, i, o, O, M0, ts, noisy_counts, Star, Planet,
     xs, ys, zs = sample_planets.get_observations(a, e, i, o, O, M0, ts, Star.mu)
 
     # Calculate phase and intensity information   
-    phases, phase_func, fpfs, photon_rates = photometry.get_planet_count_rate(Planet, Star, Detector, 
+    phases, phase_func, fpfs, photon_rates = phot.get_planet_count_rate(Planet, Star, Detector, 
                                                                               xs=xs, ys=ys, zs=zs)
     
     # For all detections, calculate likelihood
