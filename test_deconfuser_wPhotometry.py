@@ -16,8 +16,9 @@ import deconfuser.orbit_fitting as orbit_fitting
 import deconfuser.orbit_grouping as orbit_grouping
 import deconfuser.partition_ranking as partition_ranking
 
-import photometry.photometry as photometry 
+import photometry.photometry as phot
 import photometry.likelihood as L
+import photometry.ranking as ranking
 from datetime import datetime 
 
 start = datetime.now()
@@ -43,15 +44,16 @@ parser.add_argument("tolerances", type=float, nargs="+", help="orbit fit tollera
 args = parser.parse_args()
 
 # Create text file and log file for output
+output_file = f"test_deconfuser_output_{now}.txt"
 try:
-    f = open(f"output_files/test_deconfuser_output_{now}.txt", "a")
+    f = open(f"output_files/{output_file}", "a")
     logfile = open(f"output_files/run_log_{now}.log", "a") 
     sys.stdout = logfile  # redirect output to log file
     sys.stderr = logfile  # redirect error output to log file also
 except FileNotFoundError: # if directory doesn't exist, create it
     print('output_files directory not found. Creating directory.')
     os.mkdir('output_files')
-    f = open(f"output_files/test_deconfuser_output_{now}.txt", "a")
+    f = open(f"output_files/{output_file}", "a")
     logfile = open(f"output_files/run_log_{now}.log", "a")
     sys.stdout = logfile 
     sys.stderr = logfile
@@ -71,9 +73,9 @@ writer.writerow([run_parameters]) # save run parameters in file
 writer.writerow(headers)          # add headers to file
 
 # Set up planet, star, and detector parameters for photometry
-star = photometry.Star(T=5778, R_star=695700e3, d_system=10, mu=mu_sun) # system distance in parsecs -- values for the Sun
-planet = photometry.Planet(R_p=6.371e6, Ag=0.3)                         # values for Earth
-detector = photometry.Detector(qe=0.837, cic=0.016, dark_current=1.3e-4, read_noise=120, gain=1000, 
+star = phot.Star(T=5778, R_star=695700e3, d_system=10, mu=mu_sun) # system distance in parsecs -- values for the Sun
+planet = phot.Planet(R_p=6.371e6, Ag=0.3)                         # values for Earth
+detector = phot.Detector(qe=0.837, cic=0.016, dark_current=1.3e-4, read_noise=120, gain=1000, 
                     fwc=80000, conversion_gain=1.0, t=3600, D=2.36, throughput=0.38, f_pa=0.039,
                     wavelength=573.8e-9, bandwidth=56.5e-9) # Roman instrument parameters
 
@@ -120,7 +122,7 @@ for _ in range(args.n_systems):
         all_coords.append(list(map(list, observations[ip*len(ts):(ip+1)*len(ts)])))
     all_coords = np.asarray(all_coords)
     # get noisy and not noisy photometric detections for simulated system
-    noisy_detections, detections_photon_rates = photometry.get_detections_counts(args.n_planets, args.n_epochs, xyzs=all_coords, 
+    noisy_detections, detections_photon_rates = phot.get_detections_counts(args.n_planets, args.n_epochs, xyzs=all_coords, 
                                                                                Planet=planet, Star=star, Detector=detector)
 
     if args.verbose:
@@ -229,6 +231,23 @@ for _ in range(args.n_systems):
         if j < len(tolerances) - 1:
             #only keep groupings that cna be fitted with an orbit with the finer tolerance
             groupings = [g for g in groupings if any(err < tolerances[j+1] for err in orbit_fitters[j].fit(observations[list(g)], only_error=True))]
+
+# Re-rank systems with photometry
+ranking_filepath = "output_files/ranking_files/"
+try: # create ranking files directory if it doesn't exist
+    os.makedirs("output_files/ranking_files", exist_ok=True) 
+except OSError as error: 
+    print("ranking_files directory cannot be created.")
+
+# Create photometry ranking object -- houses file dataframe
+confused_systems = ranking.PhotometryRanking(filepath=f"output_files/{output_file}", n_planets=args.n_planets)
+df_confused = confused_systems.get_top_group_options()  # iterate over options with multiple groups
+df_ranked = confused_systems.top_ranked_partition()     # Get top ranked partition in each system
+df_recombined = confused_systems.combine_and_cleanup(save_file=True, save_path=ranking_filepath + f"systems_ranked_{now}.txt")  # Combine original and ranked dataframes
+# If you want to calculate percent difference between simulated and fit orbits:
+df_final = confused_systems.orbit_percent_diff()      
+df_final_wperc = confused_systems.final_recombined(save_file=True, save_path=ranking_filepath + f"systems_ranked_wPercDiff_{now}.txt")    
+print('\nPhotometry ranking complete.')
 
 end  = datetime.now()
 runtime = end - start
