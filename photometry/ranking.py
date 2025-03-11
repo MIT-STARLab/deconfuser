@@ -308,3 +308,5 @@ class PhotometryRanking:
         self.df_final = df_final
 
         return df_final
+    
+    
