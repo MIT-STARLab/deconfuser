@@ -41,19 +41,20 @@ parser.add_argument("--spread_i_O", type=float, default=0.0, help="spread of inc
 parser.add_argument("--n_systems", type=int, default=10, help="number of systems (default: 10)")
 parser.add_argument("-v", "--verbose", action="store_true", help="print planet data")
 parser.add_argument("tolerances", type=float, nargs="+", help="orbit fit tollerances")
+parser.add_argument("--output_file", type=str, default=f"test_deconfuser_output_{now}.txt", help="deconfuser output results file name")
+parser.add_argument("--ranking_path", type=str, default="output_files/ranking_files/", help="path for output ranking files")
 args = parser.parse_args()
 
 # Create text file and log file for output
-output_file = f"test_deconfuser_output_{now}.txt"
 try:
-    f = open(f"output_files/{output_file}", "a")
+    f = open(f"output_files/{args.output_file}", "a")
     logfile = open(f"output_files/run_log_{now}.log", "a") 
     sys.stdout = logfile  # redirect output to log file
     sys.stderr = logfile  # redirect error output to log file also
 except FileNotFoundError: # if directory doesn't exist, create it
     print('output_files directory not found. Creating directory.')
     os.mkdir('output_files')
-    f = open(f"output_files/{output_file}", "a")
+    f = open(f"output_files/{args.output_file}", "a")
     logfile = open(f"output_files/run_log_{now}.log", "a")
     sys.stdout = logfile 
     sys.stderr = logfile
@@ -233,20 +234,19 @@ for _ in range(args.n_systems):
             groupings = [g for g in groupings if any(err < tolerances[j+1] for err in orbit_fitters[j].fit(observations[list(g)], only_error=True))]
 
 # Re-rank systems with photometry
-ranking_filepath = "output_files/ranking_files/"
 try: # create ranking files directory if it doesn't exist
     os.makedirs("output_files/ranking_files", exist_ok=True) 
 except OSError as error: 
     print("ranking_files directory cannot be created.")
 
 # Create photometry ranking object -- houses file dataframe
-confused_systems = ranking.PhotometryRanking(filepath=f"output_files/{output_file}", n_planets=args.n_planets)
+confused_systems = ranking.PhotometryRanking(filepath=f"output_files/{args.output_file}", n_planets=args.n_planets)
 df_confused = confused_systems.get_top_group_options()  # iterate over options with multiple groups
 df_ranked = confused_systems.top_ranked_partition()     # Get top ranked partition in each system
-df_recombined = confused_systems.combine_and_cleanup(save_file=True, save_path=ranking_filepath + f"systems_ranked_{now}.txt")  # Combine original and ranked dataframes
+df_recombined = confused_systems.combine_and_cleanup(save_file=True, save_path=args.ranking_path + f"systems_ranked_{now}.txt")  # Combine original and ranked dataframes
 # If you want to calculate percent difference between simulated and fit orbits:
 df_final = confused_systems.orbit_percent_diff()      
-df_final_wperc = confused_systems.final_recombined(save_file=True, save_path=ranking_filepath + f"systems_ranked_wPercDiff_{now}.txt")    
+df_final_wperc = confused_systems.final_recombined(save_file=True, save_path=args.ranking_path + f"systems_ranked_wPercDiff_{now}.txt")    
 print('\nPhotometry ranking complete.')
 
 end  = datetime.now()
