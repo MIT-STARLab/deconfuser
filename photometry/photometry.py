@@ -4,7 +4,8 @@
 Photometry functions for use with deconfuser.
 '''
 import numpy as np
-import scipy.constants as constants
+import astropy.constants as const
+import astropy.units as u
 
 class Star:
     def __init__(self, T, R_star, d_system, mu):
@@ -20,12 +21,12 @@ class Star:
         d_system : float
             Distance of system from observer [units: parsecs]
         mu : float
-            Stellar gravitational parameter
+            Stellar gravitational parameter in units of AU^3 / yr^2 (for consistency with deconfuser)
         '''
-        self.T = T 
-        self.R_star = R_star 
-        self.d_system = d_system
-        self.mu = mu
+        self.T = T * u.K
+        self.R_star = R_star * u.m 
+        self.d_system = d_system * u.parsec
+        self.mu = mu * (u.AU**3 / u.yr**2)
 
     def blackbody_spec(self, wavelength):
         '''
@@ -42,13 +43,13 @@ class Star:
             Blackbody spectrum value of star at wavelength of interest.
 
         '''
+        wavelength *= u.m   # add units to wavelength
+        h = const.h         # Planck's constant
+        c = const.c         # speed of light
+        k = const.k_B       # boltzmann constant
         
-        h = constants.h # Planck's constant
-        c = constants.c # speed of light
-        k = constants.k # boltzmann constant
-        
-        B_lambda_star = ((2 * h * c**2)/wavelength**5) * \
-                    (1 / (np.exp((h*c)/(wavelength * k * self.T)) - 1) ) # blackbody spectrum of star [units: erg/s/cm2/Angstrom/steradian]
+        B_lambda_star = ( (2 * h * c**2) / wavelength**5) * \
+                    (1 / ( np.exp((h*c) / (wavelength * k * self.T)) - 1 ) ) / u.sr # blackbody spectrum of star [units: J / s / m^3 / sr] 
 
         return B_lambda_star
     
@@ -67,8 +68,8 @@ class Star:
             Stellar flux density.
 
         '''
-        system_distance = self.d_system * 3.086e16 # convert to meters
-        F_star = ((np.pi * B_lambda_star * (self.R_star / system_distance )**2)) # / 1e9 to convert to nm^-1
+        system_distance = self.d_system.to(u.m) # convert to meters
+        F_star = (((np.pi * u.sr) * B_lambda_star * ( self.R_star / system_distance )**2)) 
 
         return F_star
 
@@ -84,7 +85,7 @@ class Planet:
         Ag : float
             geometric albedo
         '''
-        self.R_p = R_p
+        self.R_p = R_p * u.m
         self.Ag = Ag
 
     def choose_random_Rp(self, R_min, R_max, n_planets):
@@ -307,35 +308,33 @@ def get_planet_count_rate(Planet, Star, Detector, xs, ys, zs):
 
     '''
     # Set constants
-    h = constants.h # Planck's constant
-    c = constants.c # speed of light 
+    h = const.h # Planck's constant
+    c = const.c # speed of light 
     
     # Set empty lists for appending later
     phases, phase_function, fpfs, separation, Fp, planet_counts = [], [], [], [], [], []
     
     # --------- Set constants ---------
-    AU_to_m = 1.496e11  # conversion from 1 AU to m
-    pc_to_AU = 206264.8062471 # 1 pc = 206264.8062471 AU
-    observer_distance_AU = Star.d_system * pc_to_AU # units: AU
-    d_system = Star.d_system * 3.086e16 # distance to system in meters
+    observer_distance_AU = Star.d_system.to(u.AU)  # units: AU
+    d_system = Star.d_system.to(u.m)               # distance to system in meters
 
     # --------- Convert coordinates to orbital separation from star (star @ origin (0,0,0)) ---------
     for i in range(0,len(xs[0])):
-        x_planet = xs[0][i]
-        y_planet = ys[0][i]
-        z_planet = zs[0][i]
+        x_planet = xs[0][i] * u.AU                 # all coordinates from deconfuser are in units of AU
+        y_planet = ys[0][i] * u.AU
+        z_planet = zs[0][i] * u.AU
     
         separation.append(np.sqrt(x_planet**2 + y_planet**2 + z_planet**2)) # planet separation from star
 
     # --------- Calculate star values ---------
-    B_lambda_star = Star.blackbody_spec(wavelength=Detector.wavelength) # use default settings for Sun
-    F_star = Star.stellar_flux(B_lambda_star=B_lambda_star) # stellar flux density
+    B_lambda_star = Star.blackbody_spec(wavelength=Detector.wavelength) 
+    F_star = Star.stellar_flux(B_lambda_star=B_lambda_star)             # stellar flux density
 
     # --------- Calculate phase angle, lambert phase function, flux ratio, planet count rate ---------
     for detection in range(0, len(xs[0])): # For each planet detection
         # Orbital phase angle
         planet_vector = (-xs[0][detection], -ys[0][detection], -zs[0][detection]) # planet vector = (0-x_planet, 0-y_planet, 0-z_planet)
-        observer_vector = (0 - xs[0][detection], 0 - ys[0][detection], -observer_distance_AU - zs[0][detection]) # observer location = (0,0,-observer_distance) [AU], observer vector = (0 - x_planet, 0 - y_planet, -observer_distance - z_planet)
+        observer_vector = (0 - xs[0][detection], 0 - ys[0][detection], -observer_distance_AU.value - zs[0][detection])  # observer location = (0,0,-observer_distance) [AU], observer vector = (0 - x_planet, 0 - y_planet, -observer_distance - z_planet)
         planet_mag = np.linalg.norm(planet_vector) # get magnitude of vector
         obs_mag = np.linalg.norm(observer_vector)
 
@@ -351,16 +350,17 @@ def get_planet_count_rate(Planet, Star, Detector, xs, ys, zs):
         phase_function.append(lambert_phase)
         
         # --------- Planet flux density ---------
-        F_planet = np.pi * Planet.Ag * lambert_phase * B_lambda_star * (Star.R_star / (separation[detection] * AU_to_m))**2 * (Planet.R_p / d_system)**2 # see Robinson+2016 (Characterizing Rocky & Gaseous Exoplanets...)
-        Fp.append(F_planet)
+        # See Robinson+2016
+        F_planet = np.pi * Planet.Ag * lambert_phase * B_lambda_star*u.sr * (Star.R_star / (separation[detection].to(u.m)))**2 * (Planet.R_p / d_system)**2 
+        Fp.append(F_planet.value)
 
          # --------- Flux ratio ---------
-        flux_ratio = Planet.Ag * ((Planet.R_p / (separation[detection] * AU_to_m))**2) * lambert_phase
-        fpfs.append(flux_ratio)
+        flux_ratio = Planet.Ag * ((Planet.R_p / (separation[detection].to(u.m)))**2) * lambert_phase
+        fpfs.append(flux_ratio.value)
     
         # --------- Convert to planet counts ---------
-        c_p = np.pi * Detector.qe * Detector.f_pa * Detector.throughput * (Detector.wavelength / (h * c)) * F_planet * Detector.bandwidth * (Detector.D / 2)**2
-        planet_counts.append(c_p)
+        c_p = np.pi * Detector.qe * Detector.f_pa * Detector.throughput * (Detector.wavelength*u.m / (h * c)) * F_planet * Detector.bandwidth*u.m * (Detector.D*u.m / 2)**2
+        planet_counts.append(c_p.value)
         
     return phases, phase_function, fpfs, planet_counts 
 
@@ -400,11 +400,11 @@ def get_detections_counts(n_planets, n_detections, xyzs, Planet, Star, Detector)
             [[X1_1, Y1_1, Z1_1], [X2_1, Y2_1, Z2_1], ..., [XN_M, YN_M, ZN_M]], 
             where N is the number/time of detection and M is the number of 
             planet in the system.
-    Planet : # TODO: update docstring
+    Planet : 
         Planet object containg information about planet (Ag, R_p)
-    Star : # TODO: update docstring
+    Star :
         Star object containing information about host star (R_star, distance)
-    Detector : # TODO: update docstring
+    Detector : 
         Detector object containing detecting instrument parameters.
     wavelength : float, optional
         Wavelength of observation. 
