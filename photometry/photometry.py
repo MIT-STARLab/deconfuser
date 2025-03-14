@@ -270,7 +270,7 @@ class Detector:
 
         return with_noise
 
-def get_planet_counts(Planet, Star, Detector, xs, ys, zs):
+def get_planet_count_rate(Planet, Star, Detector, xs, ys, zs):
     '''
     Function to calculate planetary phase angle given x,y,z coordinates on-sky. 
     Calculates the planet-star flux ratio and converts planet flux density
@@ -421,7 +421,7 @@ def get_detections_counts(n_planets, n_detections, xyzs, Planet, Star, Detector)
     '''
     
     noisy_counts_sys = []
-    photon_counts_sys = []
+    photon_rates_sys = []
     
     for planet in range(n_planets):
         # --------- Handle detection coordinates ----------
@@ -429,15 +429,15 @@ def get_detections_counts(n_planets, n_detections, xyzs, Planet, Star, Detector)
         xs, ys, zs = separate_xyzs(xyzs_planet) 
         
         # ----------- Calculate phase and intensity information -----------
-        phases, phase_func, fpfs, photon_counts = get_planet_counts(Planet, Star, Detector, xs=xs, 
+        phases, phase_func, fpfs, photon_rates = get_planet_count_rate(Planet, Star, Detector, xs=xs, 
                                                                        ys=ys, zs=zs)
         
         # ----------- append detections' photon rates to one list ---------
-        photon_counts_sys.append(photon_counts)
+        photon_rates_sys.append(photon_rates)
 
         # ----------- Calculate noisy detections ---------
-        noisy_counts = [Detector.add_noise(rate) for rate in photon_counts]
+        noisy_counts = [Detector.add_noise(rate) for rate in photon_rates]
         noisy_counts = np.reshape(np.asarray(noisy_counts), (1,n_detections))
         noisy_counts_sys.append(noisy_counts[0]) 
         
-    return noisy_counts_sys, photon_counts_sys  
+    return noisy_counts_sys, photon_rates_sys  
