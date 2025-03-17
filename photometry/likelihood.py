@@ -28,25 +28,22 @@ def likelihood(parameter, observed_sample, Detector, nbins=20):
     -------
         L : float
             likelihood of parameter given observed sample
-    
-    
     '''
     dist = np.asarray(Detector.noise_distribution(parameter)) # generate distribution of possible options
-    hist = np.histogram(dist, nbins) # histogram of distribution
-    bin_edges = hist[1][:-1]         # bin edges of histogram [e- counts]
+    hist = np.histogram(dist, nbins)                          # histogram of distribution
+    bin_edges = hist[1][:-1]                                  # bin edges of histogram [e- counts]
     # normalize distribution to get estimated pdf
-    pdf = hist[0] / float(len(dist)) # hist[0] = values of hist.
-        
+    pdf = hist[0] / float(len(dist)) 
+
     # -------------- Remove dependence on bin size --------------
-    bin_width = np.diff(hist[1])    # [e-]
+    bin_width = np.diff(hist[1])                        # [e-]
     updated_pdf = pdf / bin_width
     
     # Find where the value falls within the distribution
     diff_arr = np.absolute(bin_edges - observed_sample) # find nearest location to noisy count
-    id_nearest = diff_arr.argmin()  # get index of nearest value
-    
-    L = updated_pdf[id_nearest]     # L of observed_sample
-    L = L * bin_width[0]            # rescale likelihood to bin width of histogram
+    id_nearest = diff_arr.argmin()                      # get index of nearest value
+    L = updated_pdf[id_nearest]                         # L of observed_sample
+    L = L * bin_width[0]                                # rescale likelihood to bin width of histogram  
 
     return L
 
@@ -90,7 +87,7 @@ def get_L_orbit(n_detections, a, e, i, o, O, M0, ts, noisy_counts, Star, Planet,
     L_detections_orbit = np.zeros((n_detections))
     
     #  Get detection coordinates 
-    xs, ys, zs = sample_planets.get_observations(a, e, i, o, O, M0, ts, Star.mu)
+    xs, ys, zs = sample_planets.get_observations(a, e, i, o, O, M0, ts, Star.mu.value)
 
     # Calculate phase and intensity information   
     phases, phase_func, fpfs, photon_rates = phot.get_planet_count_rate(Planet, Star, Detector, 
@@ -98,8 +95,8 @@ def get_L_orbit(n_detections, a, e, i, o, O, M0, ts, noisy_counts, Star, Planet,
     
     # For all detections, calculate likelihood
     for detection in range(n_detections):
-        rate = photon_rates[detection] # get calculated photon rate of each detection
-        noisy = noisy_counts[detection] # get matching noisy detection
+        rate = photon_rates[detection]                  # get calculated photon rate of each detection accounting for integration time
+        noisy = noisy_counts[detection]                 # get matching noisy detection
         L_detections_orbit[detection] = likelihood(rate, noisy, Detector) # calculate L of detection 
         
     L_orbit = np.prod(L_detections_orbit) # L of orbit option
