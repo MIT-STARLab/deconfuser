@@ -441,3 +441,4 @@ def get_detections_counts(n_planets, n_detections, xyzs, Planet, Star, Detector)
         noisy_counts_sys.append(noisy_counts[0]) 
         
     return noisy_counts_sys, photon_rates_sys  
+
