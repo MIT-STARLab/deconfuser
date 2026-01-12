@@ -24,7 +24,7 @@ parser.add_argument("--max_e", type=float, default=0.3, help="maximum eccentrici
 parser.add_argument("--spread_i_O", type=float, default=0.0, help="spread of inclination and LAN in radians (default: 0.0 - coplanar)")
 parser.add_argument("--n_systems", type=int, default=10, help="number of systems (default: 10)")
 parser.add_argument("-v", "--verbose", action="store_true", help="print planet data")
-parser.add_argument("toleranes", type=float, nargs="+", help="orbit fit tollerances")
+parser.add_argument("tolerances", type=float, nargs="+", help="orbit fit tollerances")
 args = parser.parse_args()
 
 #observation epochs (years)
@@ -37,7 +37,7 @@ correct_partition = [tuple(range(i*len(ts),(i+1)*len(ts))) for i in range(args.n
 #1. full orbit grouping will be performed with the coarsest tolerance (i.e., recursively consider all groupings of observation)
 #2. only "full" groups that fit observation within a coarser tolerance will be fitted with a finer tolerance
 #Note: "missed" detections are not simulataed here so confusion will only "arise" with full groups (n_epochs observations per planet)
-tolerances = sorted(args.toleranes, reverse=True)
+tolerances = sorted(args.tolerances, reverse=True)
 orbit_grouper = orbit_grouping.OrbitGrouper(args.mu, ts, args.min_a-tolerances[0], args.max_a+tolerances[0], args.max_e, tolerances[0], lazy_init=False)
 orbit_fitters = [orbit_fitting.OrbitFitter(args.mu, ts, args.min_a-tol, args.max_a+tol, args.max_e, tol) for tol in tolerances[1:]]
 

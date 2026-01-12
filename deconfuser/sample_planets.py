@@ -85,7 +85,9 @@ def get_observations(a, e, i, o, O, M0, t, mu, tol=1e-10):
     #find x,y coordinates in orbit plane
     xs = (np.cos(E) - e)*a
     ys = (np.sin(E)*np.sqrt(1 - e**2))*a
+    #find z coordinates
+    zs = (xs*np.sin(o) + ys*np.cos(o))*np.sin(i) 
 
     #rotate from orbit plane to image plane
     xs, ys = xs*np.cos(o) - ys*np.sin(o), (xs*np.sin(o) + ys*np.cos(o))*np.cos(i)
-    return xs*np.cos(O) - ys*np.sin(O), xs*np.sin(O) + ys*np.cos(O)
+    return xs*np.cos(O) - ys*np.sin(O), xs*np.sin(O) + ys*np.cos(O), zs
